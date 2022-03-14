@@ -1,75 +1,48 @@
+mod notification;
+
 use clap::Parser;
 use std::error::Error;
 use std::net::{IpAddr, TcpStream};
-use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
+use crate::notification::{NotificationChannels, NotificationProducer};
 
 pub fn run_application() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
 
-    let (sender, receiver) = channel();
+    let channels = NotificationChannels::new();
 
     for i in 1..=args.threads {
-        // each thread will receive a clone of the sender channel
-        let sender = sender.clone();
+        let notifier = channels.new_notification_producer();
         thread::spawn(move || {
+            let address = args.ip_address;
             let start_port = i;
             let increment = args.threads;
-            ScannerService::from(sender, args.ip_address, start_port, increment).scan();
+            ScannerService::from(notifier, address, start_port, increment).scan();
         });
     }
-    drop(sender); // drops the original sender channel because it's now useless
 
-    print_result(receiver);
+    let consumer = channels.new_notification_consumer();
+    consumer.print_result();
 
     Ok(())
 }
 
-/// Process the given `receiver` channel and prints the result.
-fn print_result(receiver: Receiver<u16>) {
-    let mut ports = Vec::new();
-    for port in receiver {
-        ports.push(port);
-    }
-
-    let n = ports.len();
-    match n {
-        0 => println!("{n} open ports found."),
-        1 => println!("{n} open port found:"),
-        _ => println!("{n} open ports found:"),
-    };
-
-    ports.sort_unstable();
-    for port in ports {
-        println!("\t{port}");
-    }
-}
-
-/// Responsible for scanning open ports from an IP address.
-///
-/// New instances can be created with the factory function [ScannerService::from].
 struct ScannerService {
-    sender: Sender<u16>,
+    notifier: NotificationProducer,
     address: IpAddr,
     start_port: u16,
     increment: u16,
 }
 
 impl ScannerService {
-    /// Creates a new `ScannerService` from a sender channel, ip address, start port and increment.
-    ///
-    /// * `sender`: the channel to which successfully scanned ports are sent.
-    /// * `address`: the IP address from which the ports will be scanned.
-    /// * `start_port`: describes from which port the scan will begin.
-    /// * `increment`: describes how much to increment the port number in each scan.
     fn from(
-        sender: Sender<u16>,
+        notifier: NotificationProducer,
         address: IpAddr,
         start_port: u16,
         increment: u16,
     ) -> ScannerService {
         ScannerService {
-            sender,
+            notifier,
             address,
             start_port,
             increment,
@@ -82,8 +55,9 @@ impl ScannerService {
     fn scan(&self) {
         let mut port = self.start_port;
         loop {
-            if TcpStream::connect((self.address, port)).is_ok() {
-                self.sender.send(port).unwrap();
+            match TcpStream::connect((self.address, port)) {
+                Ok(_) => self.notifier.connection_succeeded(port),
+                Err(_) => self.notifier.connection_failed(port),
             }
 
             if (u16::MAX - port) <= self.increment {
