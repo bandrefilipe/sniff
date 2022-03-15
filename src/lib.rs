@@ -4,15 +4,15 @@ use clap::Parser;
 use std::error::Error;
 use std::net::{IpAddr, TcpStream};
 use std::thread;
-use crate::notification::{NotificationChannels, NotificationProducer};
+use crate::notification::{NotificationFactory, NotificationProducer};
 
 pub fn run_application() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
 
-    let channels = NotificationChannels::new();
+    let factory = NotificationFactory::new();
 
     for i in 1..=args.threads {
-        let notifier = channels.new_notification_producer();
+        let notifier = factory.new_notification_producer();
         thread::spawn(move || {
             let address = args.ip_address;
             let start_port = i;
@@ -21,7 +21,7 @@ pub fn run_application() -> Result<(), Box<dyn Error>> {
         });
     }
 
-    let consumer = channels.new_notification_consumer();
+    let consumer = factory.new_notification_consumer();
     consumer.print_result();
 
     Ok(())

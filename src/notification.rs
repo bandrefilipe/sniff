@@ -2,15 +2,14 @@ use progress_bar::color::{Color, Style};
 use progress_bar::progress_bar::ProgressBar;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
-/// Responsible for creating the necessary notification channels
-/// and both the [NotificationProducer] and [NotificationConsumer] instances.
-pub struct NotificationChannels {
+/// Responsible for creating the [NotificationProducer] and [NotificationConsumer].
+pub struct NotificationFactory {
     success_channels: (Sender<u16>, Receiver<u16>),
     failure_channels: (Sender<u16>, Receiver<u16>),
 }
 
-impl NotificationChannels {
-    /// Creates the notification channels.
+impl NotificationFactory {
+    /// Creates a new `NotificationFactory`.
     pub fn new() -> Self {
         Self {
             success_channels: channel(),
@@ -20,7 +19,7 @@ impl NotificationChannels {
 
     /// Intermediate operation.
     ///
-    /// Creates a new [NotificationProducer] with the appropriate channels.
+    /// Creates a new [NotificationProducer].
     pub fn new_notification_producer(&self) -> NotificationProducer {
         // clone the sender halves
         let success_channel = self.success_channels.0.clone();
@@ -34,8 +33,7 @@ impl NotificationChannels {
 
     /// Terminal operation.
     ///
-    /// Creates the [NotificationConsumer] with the appropriate channels
-    /// and destroys this `NotificationChannels` instance.
+    /// Creates a new [NotificationConsumer] and destroys this `NotificationFactory` instance.
     pub fn new_notification_consumer(self) -> NotificationConsumer {
         let success_channel = self.success_channels.1;
         let failure_channel = self.failure_channels.1;
@@ -87,7 +85,6 @@ impl NotificationConsumer {
         let mut progress_bar = ProgressBar::new(100);
         progress_bar.set_action("Sniffing", Color::Cyan, Style::Bold);
 
-
         // to be incremented by 1 for each notification consumed (success of failure)
         let mut progress = 0;
 
@@ -137,7 +134,12 @@ impl NotificationConsumer {
         let mut n = 0;
         for port in ports {
             n += 1;
-            progress_bar.print_info(&format!("{n}."), &format!("{port}"), Color::Blue, Style::Italic);
+            progress_bar.print_info(
+                &format!("{n}."),
+                &format!("{port}"),
+                Color::Blue,
+                Style::Normal,
+            );
         }
     }
 }
