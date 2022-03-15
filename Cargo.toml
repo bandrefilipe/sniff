@@ -1,6 +1,6 @@
 [package]
 name = "sniff"
-description = "A simple IP sniffer tool written in rust"
+description = "A simple IP Address sniffer tool written in Rust"
 version = "0.0.1"
 edition = "2021"
 authors = ["André Filipe Barranco <b.andrefilipe@gmail.com>"]
