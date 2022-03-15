@@ -1,4 +1,4 @@
-use crate::NotificationProducer;
+use crate::notification::NotificationProducer;
 use std::net::{IpAddr, TcpStream};
 
 /// Responsible for scanning the open ports of an IP address.

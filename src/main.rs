@@ -1,4 +1,8 @@
-use ip_sniffer::run_application;
+mod application;
+mod notification;
+mod scan;
+
+use crate::application::run_application;
 use std::process;
 
 fn main() {
