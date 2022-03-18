@@ -35,7 +35,7 @@ impl ScannerService {
                 Err(_) => self.notifier.connection_failed(port),
             }
 
-            if (u16::MAX - port) <= self.increment {
+            if (u16::MAX - port) < self.increment {
                 // breaks from the loop if incrementing the port would exceed the max value for u16
                 break;
             }
