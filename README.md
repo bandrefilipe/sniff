@@ -10,6 +10,7 @@ ARGS:
 
 OPTIONS:
     -h, --help                 Print help information
-    -t, --threads <THREADS>    The number of threads to use [default: 4]
+    -t, --timeout <TIMEOUT>    The connection timeout in millis [default: 3000]
+    -T, --threads <THREADS>    The number of threads to use [default: 4]
     -V, --version              Print version information
 ```

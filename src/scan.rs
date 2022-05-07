@@ -1,5 +1,6 @@
 use crate::notification::NotificationProducer;
-use std::net::{IpAddr, TcpStream};
+use std::net::{IpAddr, SocketAddr, TcpStream};
+use std::time::Duration;
 
 /// Responsible for scanning the open ports of an IP address.
 pub struct ScannerService {
@@ -7,6 +8,7 @@ pub struct ScannerService {
     address: IpAddr,
     start_port: u16,
     increment: u16,
+    timeout: Duration,
 }
 
 impl ScannerService {
@@ -16,13 +18,20 @@ impl ScannerService {
         address: IpAddr,
         start_port: u16,
         increment: u16,
+        timeout: u64,
     ) -> ScannerService {
         ScannerService {
             notifier,
             address,
             start_port,
             increment,
+            timeout: Duration::from_millis(std::cmp::max(1, timeout)),
         }
+    }
+
+    /// Creates a new [SocketAddr] from the current IP address and the given `port`.
+    fn socket_addr(&self, port: u16) -> SocketAddr {
+        SocketAddr::new(self.address, port)
     }
 
     /// Loops through each port, from `start_port` up to [u16::MAX], incrementing the port number by
@@ -30,7 +39,7 @@ impl ScannerService {
     pub fn scan(&self) {
         let mut port = self.start_port;
         loop {
-            match TcpStream::connect((self.address, port)) {
+            match TcpStream::connect_timeout(&self.socket_addr(port), self.timeout) {
                 Ok(_) => self.notifier.connection_succeeded(port),
                 Err(_) => self.notifier.connection_failed(port),
             }
