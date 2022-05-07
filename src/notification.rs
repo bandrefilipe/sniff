@@ -1,5 +1,5 @@
-use progress_bar::color::{Color, Style};
-use progress_bar::progress_bar::ProgressBar;
+use progress_bar::pb::ProgressBar;
+use progress_bar::{Color, Style};
 use std::sync::mpsc::{channel, Receiver, Sender};
 
 /// Responsible for creating the [NotificationProducer] and [NotificationConsumer].

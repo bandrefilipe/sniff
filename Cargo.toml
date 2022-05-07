@@ -1,7 +1,7 @@
 [package]
 name = "sniff"
 description = "A simple IP Address sniffer tool written in Rust"
-version = "0.0.2"
+version = "0.1.0"
 edition = "2021"
 authors = ["André Filipe Barranco <b.andrefilipe@gmail.com>"]
 license = "MIT"
@@ -9,5 +9,5 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "3.1.6", features = ["derive"] }
-progress_bar = "0.1.3"
+clap = { version = "3.1.17", features = ["derive"] }
+progress_bar = "1.0.2"
